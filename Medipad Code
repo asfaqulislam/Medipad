@@ -1,0 +1,284 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+
+typedef struct Prescription {
+    char patient_id[20];
+    char prescription_details[1000];
+    struct Prescription* next;
+} Prescription;
+
+typedef struct Doctor {
+    char name[50];
+    char specialty[50];
+    struct Doctor* next;
+} Doctor;
+
+typedef struct BloodDonor {
+    char name[50];
+    char blood_group[5];
+    struct BloodDonor* next;
+} BloodDonor;
+
+Prescription* prescription_list = NULL;
+Doctor* doctor_list = NULL;
+BloodDonor* donor_list = NULL;
+
+void clear_input_buffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+void upload_prescription(char* patient_id, char* prescription_details) {
+    if (strlen(patient_id) == 0 || strlen(prescription_details) == 0) {
+        printf("\t\t\t Error: Patient ID or prescription details cannot be empty.\n");
+        return;
+    }
+    Prescription* new_prescription = (Prescription*)malloc(sizeof(Prescription));
+    strcpy(new_prescription->patient_id, patient_id);
+    strcpy(new_prescription->prescription_details, prescription_details);
+    new_prescription->next = NULL;
+
+    if (prescription_list == NULL) {
+        prescription_list = new_prescription;
+    } else {
+        Prescription* current = prescription_list;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_prescription;
+    }
+    printf("\t\t\t\t Prescription uploaded successfully!\n");
+}
+
+void view_prescription(char* patient_id) {
+    if (strlen(patient_id) == 0) {
+        printf("\t\t\t Error: Patient ID cannot be empty.\n");
+        return;
+    }
+    Prescription* current = prescription_list;
+    int found = 0;
+    while (current != NULL) {
+        if (strcmp(current->patient_id, patient_id) == 0) {
+            printf("\t\t\t Prescription for patient ID %s:\n%s\n", patient_id, current->prescription_details);
+            found = 1;
+            break;
+        }
+        current = current->next;
+    }
+    if (!found) {
+        printf("\t\t\t Prescription not found for patient ID %s\n", patient_id);
+    }
+}
+
+void add_doctor(char* name, char* specialty) {
+    Doctor* new_doctor = (Doctor*)malloc(sizeof(Doctor));
+    strcpy(new_doctor->name, name);
+    strcpy(new_doctor->specialty, specialty);
+    new_doctor->next = NULL;
+
+    if (doctor_list == NULL) {
+        doctor_list = new_doctor;
+    } else {
+        Doctor* current = doctor_list;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_doctor;
+    }
+}
+
+void find_doctor_by_specialty(char* specialty) {
+    if (strlen(specialty) == 0) {
+        printf("\t\t\t\t Error: Specialty cannot be empty.\n");
+        return;
+    }
+    Doctor* current = doctor_list;
+    int found = 0;
+    printf("\t\t\t\t Doctors with specialty '%s':\n", specialty);
+    while (current != NULL) {
+        if (strcmp(current->specialty, specialty) == 0) {
+            printf("\t\t --- %s\n", current->name);
+            found = 1;
+        }
+        current = current->next;
+    }
+    if (!found) {
+        printf("\t\t\t\t No doctors found with specialty '%s'\n", specialty);
+    }
+}
+
+void add_blood_donor(char* name, char* blood_group) {
+    BloodDonor* new_donor = (BloodDonor*)malloc(sizeof(BloodDonor));
+    strcpy(new_donor->name, name);
+    strcpy(new_donor->blood_group, blood_group);
+    new_donor->next = NULL;
+
+    if (donor_list == NULL) {
+        donor_list = new_donor;
+    } else {
+        BloodDonor* current = donor_list;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_donor;
+    }
+}
+
+void find_blood_donors_by_group(char* blood_group) {
+    if (strlen(blood_group) == 0) {
+        printf("\t\t\t Error: Blood group cannot be empty.\n");
+        return;
+    }
+    BloodDonor* current = donor_list;
+    int found = 0;
+    printf("\t\t\t Blood donors with blood group '%s':\n", blood_group);
+    while (current != NULL) {
+        if (strcmp(current->blood_group, blood_group) == 0) {
+            printf("\t\t --- %s\n", current->name);
+            found = 1;
+        }
+        current = current->next;
+    }
+    if (!found) {
+        printf("\t\t\t No blood donors found with blood group '%s'\n", blood_group);
+    }
+}
+
+void display_menu() {
+    printf("\t\t\t\t\t|------------------|\t\n");
+    printf("\t\t\t\t------- Welcome to MediPad -------\n");
+    printf("\t\t\t\t|\t|------------------|\t  |\n");
+    printf("\t\t\t\t| 1. Upload Prescription.         |\n");
+    printf("\t\t\t\t| 2. View Prescription.           |\n");
+    printf("\t\t\t\t| 3. Add Doctor.                  |\n");
+    printf("\t\t\t\t| 4. Find Doctor by Specialty.    |\n");
+    printf("\t\t\t\t| 5. Add Blood Donor.             |\n");
+    printf("\t\t\t\t| 6. Find Blood Donors by Group.  |\n");
+    printf("\t\t\t\t| 7. Alarm Set for take madicine. |\n");
+    printf("\t\t\t\t| 8. Exit.                        |\n");
+    printf("\t\t\t\t ---------------------------------\n");
+    printf("\t\t\t\t Enter your choice: ");
+}
+
+void sound_alarm() {
+    printf("\t\t\t It's time to take Medicine. \t\t\n"); // Output a beep sound
+}
+
+void set_alarm(int alarm_hour, int alarm_minute) {
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    while(1) {
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+
+        int current_hour = timeinfo->tm_hour;
+        int current_minute = timeinfo->tm_min;
+
+        if (current_hour == alarm_hour && current_minute == alarm_minute) {
+            printf("\t\t\t Time's up! \n");
+            sound_alarm();
+            break;
+        }
+
+        sleep(1); // Wait for 1 second before checking again
+    }
+}
+
+int main() {
+    int choice;
+    char patient_id[20];
+    char prescription_details[1000];
+    char doctor_name[50];
+    char doctor_specialty[50];
+    char donor_name[50];
+    char donor_blood_group[5];
+    int alarm_hour, alarm_minute;
+
+ 
+    add_doctor("Dr. Hridoy", "Cardiologist");
+    add_doctor("Dr. Asfaqul", "Pediatrician");
+    add_doctor("Dr. Obaidul", "Orthopedic Surgeon");
+    add_doctor("Dr. Ovi", "Dermatologist");
+
+    while (1) {
+        display_menu();
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("\t\t\t Enter patient ID: ");
+                clear_input_buffer();
+                fgets(patient_id, sizeof(patient_id), stdin);
+                patient_id[strcspn(patient_id, "\n")] = 0;
+                printf("\t\t\t Enter prescription details:\n");
+                fgets(prescription_details, sizeof(prescription_details), stdin);
+                upload_prescription(patient_id, prescription_details);
+                break;
+           case 2:
+                printf("\t\t\t Enter patient ID: ");
+                clear_input_buffer();
+                fgets(patient_id, sizeof(patient_id), stdin);
+                patient_id[strcspn(patient_id, "\n")] = 0;
+
+                view_prescription(patient_id);
+                break;
+            case 3:
+                printf("\t\t\t Enter doctor's name: ");
+                clear_input_buffer();
+                fgets(doctor_name, sizeof(doctor_name), stdin);
+                doctor_name[strcspn(doctor_name, "\n")] = 0;
+                printf("\t\t\t Enter doctor's specialty: ");
+                fgets(doctor_specialty, sizeof(doctor_specialty), stdin);
+                doctor_specialty[strcspn(doctor_specialty, "\n")] = 0;
+                add_doctor(doctor_name, doctor_specialty);
+                break;
+            case 4:
+                printf("\t\t\t Enter doctor's specialty to find: ");
+                clear_input_buffer();
+                fgets(doctor_specialty, sizeof(doctor_specialty), stdin);
+                doctor_specialty[strcspn(doctor_specialty, "\n")] = 0;
+                find_doctor_by_specialty(doctor_specialty);
+                break;
+                case 5:
+                printf("\t\t\t Enter donor's name: ");
+                clear_input_buffer();
+                fgets(donor_name, sizeof(donor_name), stdin);
+                donor_name[strcspn(donor_name, "\n")] = 0;
+                printf("\t\t\t Enter donor's blood group: ");
+                fgets(donor_blood_group, sizeof(donor_blood_group), stdin);
+                donor_blood_group[strcspn(donor_blood_group, "\n")] = 0;
+                add_blood_donor(donor_name, donor_blood_group);
+                break;
+                case 6:
+                printf("\t\t\t Enter blood group to find donors: ");
+                clear_input_buffer();
+                fgets(donor_blood_group, sizeof(donor_blood_group), stdin);
+                donor_blood_group[strcspn(donor_blood_group, "\n")] = 0;
+                find_blood_donors_by_group(donor_blood_group);
+                break;
+                case 7:
+                printf("\t\t\t Enter the hour for the alarm (International Time)(0-23): ");
+                scanf("%d", &alarm_hour);
+                printf("\t\t\t Enter the minute for the alarm (0-59): ");
+                scanf("%d", &alarm_minute);
+
+                if (alarm_hour < 0 || alarm_hour > 23 || alarm_minute < 0 || alarm_minute > 59) {
+                printf("\t\t\t Invalid time format.\n");
+                } else {
+                printf("\t\t\t Alarm set for %02d:%02d\n", alarm_hour, alarm_minute);
+                set_alarm(alarm_hour, alarm_minute);
+                }
+                break;
+                case 8:
+                printf("\t\t\t\t Exiting MediPad. Thank you!\n");
+                return 0;
+                default:
+                printf("\t\t\t Invalid choice. Please enter a number between 1 and 8.\n");
+            }
+        }
+    return 0;
+}
